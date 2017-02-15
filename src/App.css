@@ -1,0 +1,63 @@
+
+@import url(http://weloveiconfonts.com/api/?family=fontawesome);
+
+/* fontawesome */
+[class*="fontawesome-"]:before {
+  font-family: 'FontAwesome', sans-serif;
+}
+
+.item {
+  display: inline-block; /*adjust width automatically to child's width*/
+  position: relative;
+  margin: 50px;
+  border: 2px solid #d31636;
+  border-radius: 3px;
+  color: #454648;
+  font-size: 1.125em;
+}
+
+.item-view {
+  display: block;
+  min-width: 117px;
+  padding: 0.5rem;
+  background-color: rgba(211, 22, 54, 0.1);
+  text-align: center;
+}
+
+.item-opt ul {
+  display: inline-flex;
+  position: absolute;
+  left: -2px;
+  bottom: -19px;
+  width: 121px;
+  height: 19px;
+  padding: 2px 0;
+  background-color: #d31636;
+  border-radius: 0 0 3px 3px;
+  color: #fff;
+}
+
+.item-opt li {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  line-height: 15px;
+  margin-left: 2px;
+  font-size: 9px;
+  text-align: center;
+}
+
+.item-opt li:hover {
+  background-color: rgba(0, 0, 0, 0.38);
+}
+
+.item-edit {
+  position: absolute;
+  top: 0;
+  width: 30px;
+  height: 100%;
+  padding: 0.5rem;
+  border: none;
+  outline: none;
+  font-size: inherit;
+}
