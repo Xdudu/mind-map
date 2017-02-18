@@ -82,11 +82,14 @@ class ThoughtItem extends Component {
     this.state = {
       showOpt: false,
       onEditing: false,
-      text: 'Mind map;)'
+      text: 'Mind map;)',
+      isImportant: false
     };
     this.toggleOpt = this.toggleOpt.bind(this);
     this.toggleEditing = this.toggleEditing.bind(this);
     this.handleInput = this.handleInput.bind(this);
+    this.handleItemOpts = this.handleItemOpts.bind(this);
+    this.toggleImportant = this.toggleImportant.bind(this);
   }
 
   toggleOpt() {
@@ -99,33 +102,49 @@ class ThoughtItem extends Component {
 
   handleInput(e) {
     this.setState({ text: e.target.value});
+    // console.log(e.target.previousElementSibling.innerHTML);
+    // e.target.style.width = e.target.previousElementSibling.clientWidth + 'px';
+    // console.log(e.target.previousElementSibling.clientWidth);
+    // console.log(e.target.clientWidth);
+  }
+
+  toggleImportant() {
+    this.setState({ isImportant: !this.state.isImportant });
   }
 
   addItem(e) {
     // TODO: add corresponding item
   }
 
-  handleItemOpts(xx) {
-    console.log(xx);
+  handleItemOpts(optType) {
+    console.log(this);
+    switch (optType) {
+      case 'make-important':
+        this.toggleImportant();
+
+        break;
+      default:
+
+    }
   }
 
   render() {
     return (
-      <div className="item">
+      <div className={"item" + (this.state.isImportant ? " important" : "")}>
         <ItemView
           onClick={this.toggleOpt}
           onDoubleClick={this.toggleEditing}
           text={this.state.text}
         />
-        { this.state.showOpt &&
-          <AllItemOpts onClick={this.handleItemOpts}/>
-        }
         { this.state.onEditing && (
           <ItemEdit
             value={this.state.text}
             onChange={this.handleInput}
             onBlur={this.toggleEditing}
          /> )
+        }
+        { this.state.showOpt &&
+          <AllItemOpts onClick={this.handleItemOpts}/>
         }
         <AddItem onClick={this.addItem}/>
       </div>
@@ -143,47 +162,26 @@ class App extends Component {
 
 var itemOptTypes = [{
     typeName: 'make-important',
-    iconFont: 'fontawesome-bolt',
-    handleClick: function() {
-      this.setState({important: true});
-    }
+    iconFont: 'fontawesome-bolt'
   }, {
     typeName: 'insert-img',
-    iconFont: 'fontawesome-picture',
-    handleClick: function() {
-      // TODO: insert image
-    }
+    iconFont: 'fontawesome-picture'
   }, {
     typeName: 'number-children',
-    iconFont: 'fontawesome-list-ol',
-    handleClick: function() {
-      // TODO:
-    }
+    iconFont: 'fontawesome-list-ol'
   }, {
     typeName: 'copy',
-    iconFont: 'fontawesome-copy',
-    handleClick: function() {
-      // TODO:
-    }
+    iconFont: 'fontawesome-copy'
   }, {
     typeName: 'paste',
-    iconFont: 'fontawesome-paste',
-    handleClick: function() {
-      // TODO:
-    }
+    iconFont: 'fontawesome-paste'
   }, {
     typeName: 'cut',
-    iconFont: 'fontawesome-cut',
-    handleClick: function() {
-      // TODO:
-    }
+    iconFont: 'fontawesome-cut'
   }, {
     typeName: 'delete',
     iconFont: 'fontawesome-remove',
-    subType: ['delete-self', 'delete-self-and-subs'],
-    handleClick: function() {
-      // TODO:
-    }
+    subType: ['delete-self', 'delete-self-and-subs']
   }];
 
 export default App;

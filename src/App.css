@@ -17,6 +17,10 @@
   font-size: 1.125em;
 }
 
+.item[class~="important"] {
+  border: 2px dashed #d31636;
+}
+
 .item-view {
   display: block;
   min-width: 117px;
