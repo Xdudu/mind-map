@@ -14,28 +14,6 @@ class ItemView extends Component {
   }
 }
 
-class ItemOpt extends Component {
-  render() {
-    var itemOptList = itemOptTypes.map((opt, index) => (
-          <li key={'item'+index} className={'remove-item ' + opt.iconFont}>
-            { (opt.typeName === 'delete') &&
-              <div className="item-opt-remove">
-                <span className={opt.subType[0]}> Self</span>
-                <span className={opt.subType[1]}> Self & Subs</span>
-              </div>
-            }
-          </li>
-        ));
-    return (
-      <div className="item-opt" onClick={this.props.onClick}>
-        <ul>
-          {itemOptList}
-        </ul>
-      </div>
-    )
-  }
-}
-
 class ItemEdit extends Component {
   render() {
     return (
@@ -59,6 +37,40 @@ class AddItem extends Component {
         <div className="add-item-sibling fontawesome-angle-down"></div>
         <div className="add-item-parent fontawesome-angle-left"></div>
         <div className="add-item-child fontawesome-angle-right"></div>
+      </div>
+    )
+  }
+}
+
+class ItemOpt extends Component {
+  render() {
+    const optObj = this.props.opt;
+    const optName = optObj.subType === undefined ? optObj.typeName : optObj.subType;
+    return (
+      <li
+        className={(this.props.opt.typeName === 'delete' ? 'delete-has-sub-opts ' : '') + optObj.iconFont}
+        onClick={optObj.subType === undefined ? () => {this.props.onClick(optName)} : undefined}>
+        { optObj.typeName === 'delete' &&
+          <div>
+            <span onClick={(e) => {this.props.onClick(optName[0])}}>Self</span>
+            <span onClick={(e) => {this.props.onClick(optName[1])}}>Self & Subs</span>
+          </div>
+        }
+      </li>
+    )
+  }
+}
+
+class AllItemOpts extends Component {
+  render() {
+    var itemOptList = itemOptTypes.map((opt, index) => (
+          <ItemOpt opt={opt} key={opt.typeName + index} onClick={this.props.onClick}/>
+        ));
+    return (
+      <div className="item-opt">
+        <ul>
+          {itemOptList}
+        </ul>
       </div>
     )
   }
@@ -93,8 +105,8 @@ class ThoughtItem extends Component {
     // TODO: add corresponding item
   }
 
-  handleItemOpts(e) {
-    const optType = e.target.className.split(' ')[0]
+  handleItemOpts(xx) {
+    console.log(xx);
   }
 
   render() {
@@ -106,7 +118,7 @@ class ThoughtItem extends Component {
           text={this.state.text}
         />
         { this.state.showOpt &&
-          <ItemOpt onClick={this.handleItemOpts}/>
+          <AllItemOpts onClick={this.handleItemOpts}/>
         }
         { this.state.onEditing && (
           <ItemEdit
@@ -131,26 +143,47 @@ class App extends Component {
 
 var itemOptTypes = [{
     typeName: 'make-important',
-    iconFont: 'fontawesome-bolt'
-  },{
+    iconFont: 'fontawesome-bolt',
+    handleClick: function() {
+      this.setState({important: true});
+    }
+  }, {
     typeName: 'insert-img',
-    iconFont: 'fontawesome-picture'
-  },{
+    iconFont: 'fontawesome-picture',
+    handleClick: function() {
+      // TODO: insert image
+    }
+  }, {
     typeName: 'number-children',
-    iconFont: 'fontawesome-list-ol'
-  },{
+    iconFont: 'fontawesome-list-ol',
+    handleClick: function() {
+      // TODO:
+    }
+  }, {
     typeName: 'copy',
-    iconFont: 'fontawesome-copy'
-  },{
+    iconFont: 'fontawesome-copy',
+    handleClick: function() {
+      // TODO:
+    }
+  }, {
     typeName: 'paste',
-    iconFont: 'fontawesome-paste'
-  },{
+    iconFont: 'fontawesome-paste',
+    handleClick: function() {
+      // TODO:
+    }
+  }, {
     typeName: 'cut',
-    iconFont: 'fontawesome-cut'
-  },{
+    iconFont: 'fontawesome-cut',
+    handleClick: function() {
+      // TODO:
+    }
+  }, {
     typeName: 'delete',
     iconFont: 'fontawesome-remove',
-    subType: ['delete-self', 'delete-self-and-subs']
+    subType: ['delete-self', 'delete-self-and-subs'],
+    handleClick: function() {
+      // TODO:
+    }
   }];
 
 export default App;

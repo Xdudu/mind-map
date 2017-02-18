@@ -40,6 +40,7 @@
 
 .item-opt li {
   display: inline-block;
+  position: relative;
   width: 15px;
   height: 15px;
   line-height: 15px;
@@ -56,11 +57,7 @@
   background-color: rgba(0, 0, 0, 0.38);
 }
 
-.remove-item {
-  position: relative;
-}
-
-.item-opt-remove {
+.delete-has-sub-opts div {
   display: none;
   position: absolute;
   bottom: 0;
@@ -69,16 +66,16 @@
   background-color: rgba(211, 22, 54, 0.5);
 }
 
-.item-opt-remove span {
+.delete-has-sub-opts div span {
   display: block;
   height: 15px;
 }
 
-.remove-item:hover .item-opt-remove {
+.delete-has-sub-opts:hover div {
   display: block;
 }
 
-.item-opt-remove span:hover {
+.delete-has-sub-opts div span:hover {
   background-color: rgba(0, 0, 0, 0.38);
   cursor: default;
 }
