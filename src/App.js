@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import ReactDOM from 'react-dom';
 import './App.css';
 
 class ItemView extends Component {
@@ -92,6 +93,15 @@ class ThoughtItem extends Component {
     this.toggleImportant = this.toggleImportant.bind(this);
   }
 
+  componentDidUpdate (prevProps, prevState) {
+    if (this.state.onEditing === true) {
+      var thisThoughtItemNode = ReactDOM.findDOMNode(this);
+      var thisItemViewNode = thisThoughtItemNode.firstElementChild;
+      var thisItemEditNode = thisItemViewNode.nextElementSibling;
+      thisItemEditNode.style.width = thisItemViewNode.clientWidth + 1 + 'px';
+    }
+  }
+
   toggleOpt() {
     this.setState({ showOpt: true });
   }
@@ -101,7 +111,13 @@ class ThoughtItem extends Component {
   }
 
   handleInput(e) {
-    this.setState({ text: e.target.value});
+    var tempText = e.target.value;
+    // if the key `Enter` is pressed, discard it and quit editing
+    if (tempText.charCodeAt(tempText.length-1) === 10) {
+      tempText = tempText.slice(0, -1);
+      this.setState({ onEditing: false});
+    };
+    this.setState({ text: tempText});
   }
 
   toggleImportant() {
@@ -118,7 +134,7 @@ class ThoughtItem extends Component {
         this.toggleImportant();
         break;
       case 'insert-img':
-        this.insertImg();
+        // this.insertImg();
         break;
       default:
       // this.props.crossItemOpts();
@@ -170,7 +186,7 @@ class ThoughtNode extends Component {
       <div className="branch">
         <div className="topic">
           <ThoughtItem
-            itemID={this.props.treeModel.topicID}
+            thisItemID={this.props.treeModel.topicID}
             onClick={this.handleClick}/>
         </div>
         { this.props.treeModel.subTopicsID !== undefined &&
@@ -188,28 +204,7 @@ class App extends Component {
     super();
     this.state = {
       thoughtTree: {
-        topicID: 'a',
-        subTopicsID: [
-          {
-            topicID: 'b',
-            subTopicsID: [
-              {
-                topicID: 'c',
-                subTopicsID: [
-                  {
-                    topicID: 'd'
-                  }, {
-                    topicID: 'e'
-                  }
-                ]
-              }, {
-                topicID: 'f'
-              }
-            ]
-          }, {
-            topicID: 'g'
-          }
-        ]
+        topicID: Date.now()
       }
     };
   }
