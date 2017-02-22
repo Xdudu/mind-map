@@ -9,7 +9,7 @@
 .item {
   display: inline-block; /*adjust width automatically to child's width*/
   position: relative;
-  margin: 50px; /* TODO: for debug, delete later */
+  margin: 20px 50px; /* TODO: for debug, delete later */
   border: 2px solid #d31636;
   border-radius: 3px;
   color: #454648;
@@ -133,4 +133,14 @@
 
 .add-item div:hover {
   display: block;
+}
+
+.branch {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid blue;
+}
+
+.topic, .sub-topics {
+  display: inline-block;
 }

@@ -82,13 +82,13 @@ class ThoughtItem extends Component {
     this.state = {
       showOpt: false,
       onEditing: false,
-      text: 'Mind map;)',
+      text: '',
       isImportant: false
     };
     this.toggleOpt = this.toggleOpt.bind(this);
     this.toggleEditing = this.toggleEditing.bind(this);
     this.handleInput = this.handleInput.bind(this);
-    this.handleItemOpts = this.handleItemOpts.bind(this);
+    this.dispatchItemOpts = this.dispatchItemOpts.bind(this);
     this.toggleImportant = this.toggleImportant.bind(this);
   }
 
@@ -102,10 +102,6 @@ class ThoughtItem extends Component {
 
   handleInput(e) {
     this.setState({ text: e.target.value});
-    // console.log(e.target.previousElementSibling.innerHTML);
-    // e.target.style.width = e.target.previousElementSibling.clientWidth + 'px';
-    // console.log(e.target.previousElementSibling.clientWidth);
-    // console.log(e.target.clientWidth);
   }
 
   toggleImportant() {
@@ -116,19 +112,21 @@ class ThoughtItem extends Component {
     // TODO: add corresponding item
   }
 
-  handleItemOpts(optType) {
-    console.log(this);
+  dispatchItemOpts(optType) {
     switch (optType) {
       case 'make-important':
         this.toggleImportant();
-
+        break;
+      case 'insert-img':
+        this.insertImg();
         break;
       default:
-
-    }
+      // this.props.crossItemOpts();
+    };
   }
 
   render() {
+    var theItemID = this.state.itemID;
     return (
       <div className={"item" + (this.state.isImportant ? " important" : "")}>
         <ItemView
@@ -144,18 +142,80 @@ class ThoughtItem extends Component {
          /> )
         }
         { this.state.showOpt &&
-          <AllItemOpts onClick={this.handleItemOpts}/>
+          <AllItemOpts onClick={this.dispatchItemOpts}/>
         }
-        <AddItem onClick={this.addItem}/>
+        <AddItem onClick={() => {this.props.onClick(theItemID)}}/>
+      </div>
+    )
+  }
+}
+
+class ThoughtNode extends Component {
+  constructor() {
+    super();
+    this.handleClick = this.handleClick.bind(this);
+  };
+
+  handleClick() {
+    // console.log(deepFindPointer(theItemID, this.thoughtTree, []));
+  };
+
+  render() {
+    if (this.props.treeModel.subTopicsID !== undefined) {
+    var subDiv = this.props.treeModel.subTopicsID.map(function(topic,index) {
+        return <ThoughtNode treeModel={topic} key={topic.topicID}/>
+      });
+    }
+    return (
+      <div className="branch">
+        <div className="topic">
+          <ThoughtItem
+            itemID={this.props.treeModel.topicID}
+            onClick={this.handleClick}/>
+        </div>
+        { this.props.treeModel.subTopicsID !== undefined &&
+          <div className="sub-topics">
+            {subDiv}
+          </div>
+        }
       </div>
     )
   }
 }
 
 class App extends Component {
+  constructor() {
+    super();
+    this.state = {
+      thoughtTree: {
+        topicID: 'a',
+        subTopicsID: [
+          {
+            topicID: 'b',
+            subTopicsID: [
+              {
+                topicID: 'c',
+                subTopicsID: [
+                  {
+                    topicID: 'd'
+                  }, {
+                    topicID: 'e'
+                  }
+                ]
+              }, {
+                topicID: 'f'
+              }
+            ]
+          }, {
+            topicID: 'g'
+          }
+        ]
+      }
+    };
+  }
   render() {
     return (
-      <ThoughtItem/>
+      <ThoughtNode treeModel={this.state.thoughtTree} />
     );
   }
 }
@@ -183,5 +243,25 @@ var itemOptTypes = [{
     iconFont: 'fontawesome-remove',
     subType: ['delete-self', 'delete-self-and-subs']
   }];
+
+function deepFindPointer(theItemID, theTree, thePointer) {
+  if (theTree.topicID === theItemID) {
+    return thePointer;
+  } else {
+    if (theTree.subTopicsID === undefined) {
+      return 'not this branch';
+    };
+    for (var i = 0; i < theTree.subTopicsID.length; i++) {
+      thePointer.push(i);
+      var result = deepFindPointer(theItemID, theTree.subTopicsID[i], thePointer);
+      if (result === 'not this branch') {
+        thePointer.pop();
+      } else {
+        break;
+      };
+    };
+    return result;
+  };
+};
 
 export default App;
