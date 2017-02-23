@@ -94,11 +94,11 @@ class ThoughtItem extends Component {
   }
 
   componentDidUpdate (prevProps, prevState) {
-    if (this.state.onEditing === true) {
+    if (this.state.onEditing) {
       var thisThoughtItemNode = ReactDOM.findDOMNode(this);
       var thisItemViewNode = thisThoughtItemNode.firstElementChild;
       var thisItemEditNode = thisItemViewNode.nextElementSibling;
-      thisItemEditNode.style.width = thisItemViewNode.clientWidth + 1 + 'px';
+      thisItemEditNode.style.width = (thisItemViewNode.clientWidth + 1) + 'px';
     }
   }
 
@@ -115,7 +115,7 @@ class ThoughtItem extends Component {
     // if the key `Enter` is pressed, discard it and quit editing
     if (tempText.charCodeAt(tempText.length-1) === 10) {
       tempText = tempText.slice(0, -1);
-      this.setState({ onEditing: false});
+      this.toggleEditing();
     };
     this.setState({ text: tempText});
   }
@@ -142,7 +142,6 @@ class ThoughtItem extends Component {
   }
 
   render() {
-    var theItemID = this.state.itemID;
     return (
       <div className={"item" + (this.state.isImportant ? " important" : "")}>
         <ItemView
@@ -160,26 +159,27 @@ class ThoughtItem extends Component {
         { this.state.showOpt &&
           <AllItemOpts onClick={this.dispatchItemOpts}/>
         }
-        <AddItem onClick={() => {this.props.onClick(theItemID)}}/>
+        <AddItem onClick={this.props.onClick}/>
       </div>
     )
   }
 }
 
 class ThoughtNode extends Component {
-  constructor() {
-    super();
-    this.handleClick = this.handleClick.bind(this);
-  };
-
-  handleClick() {
-    // console.log(deepFindPointer(theItemID, this.thoughtTree, []));
-  };
-
   render() {
-    if (this.props.treeModel.subTopicsID !== undefined) {
-    var subDiv = this.props.treeModel.subTopicsID.map(function(topic,index) {
-        return <ThoughtNode treeModel={topic} key={topic.topicID}/>
+    if (this.props.treeModel.subTopicsID.length !== 0) {
+      var pointer = this.props.pointer.slice(0);
+      var onClick = this.props.onClick;
+      var subDiv = this.props.treeModel.subTopicsID.map(function(topic, index) {
+        var pointerTemp = pointer.slice(0);
+        pointerTemp.push(index);
+        return (
+          <ThoughtNode
+            key={topic.topicID}
+            treeModel={topic}
+            pointer={pointerTemp}
+            onClick={onClick} />
+        )
       });
     }
     return (
@@ -187,9 +187,9 @@ class ThoughtNode extends Component {
         <div className="topic">
           <ThoughtItem
             thisItemID={this.props.treeModel.topicID}
-            onClick={this.handleClick}/>
+            onClick={this.props.onClick(this.props.pointer)} />
         </div>
-        { this.props.treeModel.subTopicsID !== undefined &&
+        { this.props.treeModel.subTopicsID.length !== 0 &&
           <div className="sub-topics">
             {subDiv}
           </div>
@@ -203,14 +203,63 @@ class App extends Component {
   constructor() {
     super();
     this.state = {
-      thoughtTree: {
-        topicID: Date.now()
-      }
+      thoughtTree: [{
+        topicID: Date.now(),
+        subTopicsID: []
+      }]
     };
+    this.handleAddItem = this.handleAddItem.bind(this);
   }
+
+  handleAddItem(pointer) {
+    var theApp = this;
+    return function(e) {
+      var addType = e.target.className.match(/(sibling|parent|child)\b/)[0];
+      var thoughtTreeTemp = theApp.state.thoughtTree.slice(0)[0];
+      var itemOnOpt;
+      switch (addType) {
+        case 'child':
+          itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, true);
+          itemOnOpt.subTopicsID.push({
+            topicID: Date.now(),
+            subTopicsID: []
+          });
+          theApp.setState({thoughtTree: [thoughtTreeTemp]})
+          break;
+        case 'sibling':
+          if (!pointer.length) {
+            return;
+          };
+          itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, false);
+          itemOnOpt.subTopicsID.splice((pointer[pointer.length - 1] + 1), 0, {
+            topicID: Date.now(),
+            subTopicsID: []
+          });
+          theApp.setState({thoughtTree: [thoughtTreeTemp]})
+          break;
+        // case 'parent':
+        //   itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, false);
+        //   var itemBeenClicked = itemOnOpt.subTopicsID.splice(pointer[pointer.length - 1], 1, {
+        //     topicID: Date.now(),
+        //     subTopicsID: []
+        //   });
+        //   itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, true);
+        //   itemOnOpt.subTopicsID.push(itemBeenClicked[0]);
+        //   theApp.setState({thoughtTree: [thoughtTreeTemp]})
+        //   break;
+        default:
+
+      }
+    }
+  }
+
   render() {
     return (
-      <ThoughtNode treeModel={this.state.thoughtTree} />
+      <ThoughtNode
+        className={'thought-tree-root'}
+        treeModel={this.state.thoughtTree[0]}
+        pointer={[]}
+        onClick={this.handleAddItem} />
     );
   }
 }
@@ -239,24 +288,14 @@ var itemOptTypes = [{
     subType: ['delete-self', 'delete-self-and-subs']
   }];
 
-function deepFindPointer(theItemID, theTree, thePointer) {
-  if (theTree.topicID === theItemID) {
-    return thePointer;
-  } else {
-    if (theTree.subTopicsID === undefined) {
-      return 'not this branch';
-    };
-    for (var i = 0; i < theTree.subTopicsID.length; i++) {
-      thePointer.push(i);
-      var result = deepFindPointer(theItemID, theTree.subTopicsID[i], thePointer);
-      if (result === 'not this branch') {
-        thePointer.pop();
-      } else {
-        break;
+  function deepFindItem(thePointer, theTree, findSelf) {
+    var theItem = theTree;
+    if (!(!thePointer.length && findSelf)) {
+      for (var i = 0; i < (findSelf ? thePointer.length : thePointer.length - 1); i++) {
+        theItem = theItem.subTopicsID[thePointer[i]];
       };
     };
-    return result;
-  };
-};
+    return theItem;
+  }
 
 export default App;

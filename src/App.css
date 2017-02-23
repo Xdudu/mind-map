@@ -143,5 +143,9 @@
 }
 
 .topic, .sub-topics {
-  display: inline-block;
+  display: inline-flex;
+}
+
+.sub-topics {
+  flex-direction: column;
 }
