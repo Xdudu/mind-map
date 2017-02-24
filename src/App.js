@@ -78,17 +78,16 @@ class AllItemOpts extends Component {
 }
 
 class ThoughtItem extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       showOpt: false,
       onEditing: false,
-      text: '',
       isImportant: false
     };
+    this.handleInput = this.handleInput.bind(this);
     this.toggleOpt = this.toggleOpt.bind(this);
     this.toggleEditing = this.toggleEditing.bind(this);
-    this.handleInput = this.handleInput.bind(this);
     this.dispatchItemOpts = this.dispatchItemOpts.bind(this);
     this.toggleImportant = this.toggleImportant.bind(this);
   }
@@ -102,6 +101,18 @@ class ThoughtItem extends Component {
     }
   }
 
+  handleInput(e) {
+    var tempText = e.target.value;
+    // if the key `Enter` is pressed, discard it and quit editing
+    if (tempText.charCodeAt(tempText.length-1) === 10) {
+      console.log('end!');
+      tempText = tempText.slice(0, -1);
+      this.toggleEditing();
+      // this.toggleOpt();
+    };
+    this.props.handleInput(tempText);
+  }
+
   toggleOpt() {
     this.setState({ showOpt: true });
   }
@@ -110,22 +121,8 @@ class ThoughtItem extends Component {
     this.setState({ onEditing: !this.state.onEditing });
   }
 
-  handleInput(e) {
-    var tempText = e.target.value;
-    // if the key `Enter` is pressed, discard it and quit editing
-    if (tempText.charCodeAt(tempText.length-1) === 10) {
-      tempText = tempText.slice(0, -1);
-      this.toggleEditing();
-    };
-    this.setState({ text: tempText});
-  }
-
   toggleImportant() {
     this.setState({ isImportant: !this.state.isImportant });
-  }
-
-  addItem(e) {
-    // TODO: add corresponding item
   }
 
   dispatchItemOpts(optType) {
@@ -147,11 +144,11 @@ class ThoughtItem extends Component {
         <ItemView
           onClick={this.toggleOpt}
           onDoubleClick={this.toggleEditing}
-          text={this.state.text}
+          text={this.props.content}
         />
         { this.state.onEditing && (
           <ItemEdit
-            value={this.state.text}
+            value={this.props.content}
             onChange={this.handleInput}
             onBlur={this.toggleEditing}
          /> )
@@ -166,17 +163,29 @@ class ThoughtItem extends Component {
 }
 
 class ThoughtNode extends Component {
+  constructor() {
+    super();
+    this.handleInput = this.handleInput.bind(this);
+  }
+
+  handleInput(text) {
+    this.props.handleInput(text, this.props.pointer);
+  }
+
   render() {
-    if (this.props.treeModel.subTopicsID.length !== 0) {
+    if (this.props.treeModel.subTopicsContent.length !== 0) {
       var pointer = this.props.pointer.slice(0);
       var onClick = this.props.onClick;
-      var subDiv = this.props.treeModel.subTopicsID.map(function(topic, index) {
+      var handleInput = this.props.handleInput;
+      var subDiv = this.props.treeModel.subTopicsContent.map(function(topic, index) {
         var pointerTemp = pointer.slice(0);
         pointerTemp.push(index);
         return (
           <ThoughtNode
-            key={topic.topicID}
+            key={pointer.length + ' ' + index}
             treeModel={topic}
+            content={topic.topicContent}
+            handleInput={handleInput}
             pointer={pointerTemp}
             onClick={onClick} />
         )
@@ -186,10 +195,11 @@ class ThoughtNode extends Component {
       <div className="branch">
         <div className="topic">
           <ThoughtItem
-            thisItemID={this.props.treeModel.topicID}
+            content={this.props.content}
+            handleInput={this.handleInput}
             onClick={this.props.onClick(this.props.pointer)} />
         </div>
-        { this.props.treeModel.subTopicsID.length !== 0 &&
+        { this.props.treeModel.subTopicsContent.length !== 0 &&
           <div className="sub-topics">
             {subDiv}
           </div>
@@ -204,11 +214,19 @@ class App extends Component {
     super();
     this.state = {
       thoughtTree: [{
-        topicID: Date.now(),
-        subTopicsID: []
+        topicContent: 'Mind Map;)',
+        subTopicsContent: []
       }]
     };
     this.handleAddItem = this.handleAddItem.bind(this);
+    this.handleInput = this.handleInput.bind(this);
+  }
+
+  handleInput(text, pointer) {
+    var thoughtTreeTemp = this.state.thoughtTree.slice(0)[0];
+    var contentChangedItem = deepFindItem(pointer, thoughtTreeTemp, true);
+    contentChangedItem.topicContent = text;
+    this.setState({thoughtTree: [thoughtTreeTemp]});
   }
 
   handleAddItem(pointer) {
@@ -220,33 +238,34 @@ class App extends Component {
       switch (addType) {
         case 'child':
           itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, true);
-          itemOnOpt.subTopicsID.push({
-            topicID: Date.now(),
-            subTopicsID: []
+          itemOnOpt.subTopicsContent.push({
+            topicContent: '',
+            subTopicsContent: []
           });
-          theApp.setState({thoughtTree: [thoughtTreeTemp]})
+          theApp.setState({thoughtTree: [thoughtTreeTemp]});
           break;
         case 'sibling':
           if (!pointer.length) {
             return;
           };
           itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, false);
-          itemOnOpt.subTopicsID.splice((pointer[pointer.length - 1] + 1), 0, {
-            topicID: Date.now(),
-            subTopicsID: []
+          console.log(pointer[pointer.length - 1]);
+          itemOnOpt.subTopicsContent.splice((pointer[pointer.length - 1] + 1), 0, {
+            topicContent: '',
+            subTopicsContent: []
           });
+          theApp.setState({thoughtTree: [thoughtTreeTemp]});
+          break;
+        case 'parent':
+          itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, false);
+          var itemBeenClicked = itemOnOpt.subTopicsContent.splice(pointer[pointer.length - 1], 1, {
+            topicContent: '',
+            subTopicsContent: []
+          });
+          itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, true);
+          itemOnOpt.subTopicsContent.push(itemBeenClicked[0]);
           theApp.setState({thoughtTree: [thoughtTreeTemp]})
           break;
-        // case 'parent':
-        //   itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, false);
-        //   var itemBeenClicked = itemOnOpt.subTopicsID.splice(pointer[pointer.length - 1], 1, {
-        //     topicID: Date.now(),
-        //     subTopicsID: []
-        //   });
-        //   itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, true);
-        //   itemOnOpt.subTopicsID.push(itemBeenClicked[0]);
-        //   theApp.setState({thoughtTree: [thoughtTreeTemp]})
-        //   break;
         default:
 
       }
@@ -256,8 +275,11 @@ class App extends Component {
   render() {
     return (
       <ThoughtNode
+        key={'root'}
         className={'thought-tree-root'}
         treeModel={this.state.thoughtTree[0]}
+        content={this.state.thoughtTree[0].topicContent}
+        handleInput={this.handleInput}
         pointer={[]}
         onClick={this.handleAddItem} />
     );
@@ -292,7 +314,7 @@ var itemOptTypes = [{
     var theItem = theTree;
     if (!(!thePointer.length && findSelf)) {
       for (var i = 0; i < (findSelf ? thePointer.length : thePointer.length - 1); i++) {
-        theItem = theItem.subTopicsID[thePointer[i]];
+        theItem = theItem.subTopicsContent[thePointer[i]];
       };
     };
     return theItem;
