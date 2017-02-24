@@ -11,7 +11,7 @@ class ItemView extends Component {
         onDoubleClick={this.props.onDoubleClick} >
         {this.props.text}
       </label>
-    )
+    );
   }
 }
 
@@ -27,7 +27,7 @@ class ItemEdit extends Component {
         onChange={this.props.onChange}
         onBlur={this.props.onBlur}
       />
-    )
+    );
   }
 }
 
@@ -88,8 +88,8 @@ class ThoughtItem extends Component {
     this.handleInput = this.handleInput.bind(this);
     this.toggleOpt = this.toggleOpt.bind(this);
     this.toggleEditing = this.toggleEditing.bind(this);
-    this.dispatchItemOpts = this.dispatchItemOpts.bind(this);
     this.toggleImportant = this.toggleImportant.bind(this);
+    this.dispatchItemOpts = this.dispatchItemOpts.bind(this);
   }
 
   componentDidUpdate (prevProps, prevState) {
@@ -105,7 +105,6 @@ class ThoughtItem extends Component {
     var tempText = e.target.value;
     // if the key `Enter` is pressed, discard it and quit editing
     if (tempText.charCodeAt(tempText.length-1) === 10) {
-      console.log('end!');
       tempText = tempText.slice(0, -1);
       this.toggleEditing();
       // this.toggleOpt();
@@ -158,45 +157,33 @@ class ThoughtItem extends Component {
         }
         <AddItem onClick={this.props.onClick}/>
       </div>
-    )
+    );
   }
 }
 
 class ThoughtNode extends Component {
-  constructor() {
-    super();
-    this.handleInput = this.handleInput.bind(this);
-  }
-
-  handleInput(text) {
-    this.props.handleInput(text, this.props.pointer);
-  }
-
   render() {
     if (this.props.treeModel.subTopicsContent.length !== 0) {
-      var pointer = this.props.pointer.slice(0);
-      var onClick = this.props.onClick;
-      var handleInput = this.props.handleInput;
-      var subDiv = this.props.treeModel.subTopicsContent.map(function(topic, index) {
-        var pointerTemp = pointer.slice(0);
+      var subDiv = this.props.treeModel.subTopicsContent.map((topic, index) => {
+        var pointerTemp = this.props.pointer.slice(0);
         pointerTemp.push(index);
         return (
           <ThoughtNode
-            key={pointer.length + ' ' + index}
+            key={pointerTemp.length + ' ' + index}
             treeModel={topic}
             content={topic.topicContent}
-            handleInput={handleInput}
             pointer={pointerTemp}
-            onClick={onClick} />
-        )
+            handleInput={this.props.handleInput}
+            onClick={this.props.onClick} />
+        );
       });
-    }
+    };
     return (
       <div className="branch">
         <div className="topic">
           <ThoughtItem
             content={this.props.content}
-            handleInput={this.handleInput}
+            handleInput={(text) => {this.props.handleInput(text, this.props.pointer)}}
             onClick={this.props.onClick(this.props.pointer)} />
         </div>
         { this.props.treeModel.subTopicsContent.length !== 0 &&
@@ -205,7 +192,7 @@ class ThoughtNode extends Component {
           </div>
         }
       </div>
-    )
+    );
   }
 }
 
@@ -268,7 +255,7 @@ class App extends Component {
           break;
         default:
 
-      }
+      };
     }
   }
 
@@ -279,14 +266,15 @@ class App extends Component {
         className={'thought-tree-root'}
         treeModel={this.state.thoughtTree[0]}
         content={this.state.thoughtTree[0].topicContent}
-        handleInput={this.handleInput}
         pointer={[]}
+        handleInput={this.handleInput}
         onClick={this.handleAddItem} />
     );
   }
 }
 
-var itemOptTypes = [{
+var itemOptTypes = [
+  {
     typeName: 'make-important',
     iconFont: 'fontawesome-bolt'
   }, {
@@ -308,16 +296,17 @@ var itemOptTypes = [{
     typeName: 'delete',
     iconFont: 'fontawesome-remove',
     subType: ['delete-self', 'delete-self-and-subs']
-  }];
-
-  function deepFindItem(thePointer, theTree, findSelf) {
-    var theItem = theTree;
-    if (!(!thePointer.length && findSelf)) {
-      for (var i = 0; i < (findSelf ? thePointer.length : thePointer.length - 1); i++) {
-        theItem = theItem.subTopicsContent[thePointer[i]];
-      };
-    };
-    return theItem;
   }
+];
+
+function deepFindItem(thePointer, theTree, findSelf) {
+  var theItem = theTree;
+  if (!(!thePointer.length && findSelf)) {
+    for (var i = 0; i < (findSelf ? thePointer.length : thePointer.length - 1); i++) {
+      theItem = theItem.subTopicsContent[thePointer[i]];
+    };
+  };
+  return theItem;
+}
 
 export default App;
