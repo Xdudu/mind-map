@@ -86,10 +86,13 @@ class ThoughtItem extends Component {
       isImportant: false
     };
     this.handleInput = this.handleInput.bind(this);
-    this.toggleOpt = this.toggleOpt.bind(this);
-    this.toggleEditing = this.toggleEditing.bind(this);
+    this.handleClick = this.handleClick.bind(this);
+    // this.toggleOpt = this.toggleOpt.bind(this);
+    // this.toggleEditing = this.toggleEditing.bind(this);
     this.toggleImportant = this.toggleImportant.bind(this);
     this.dispatchItemOpts = this.dispatchItemOpts.bind(this);
+    this.clicks = 0;
+    this.timer = null;
   }
 
   componentDidUpdate (prevProps, prevState) {
@@ -112,13 +115,27 @@ class ThoughtItem extends Component {
     this.props.handleInput(tempText);
   }
 
-  toggleOpt() {
-    this.setState({ showOpt: true });
+  handleClick(e) {
+    this.clicks++;
+    if (this.clicks === 1) {
+      this.timer = setTimeout(() => {
+        this.setState({ showOpt: true });
+        this.click = 0;
+      }, 300);
+    } else {
+      this.setState({ onEditing: !this.state.onEditing });
+      clearTimeout(this.timer);
+      this.clicks = 0;
+    }
   }
 
-  toggleEditing() {
-    this.setState({ onEditing: !this.state.onEditing });
-  }
+  // toggleOpt() {
+  //   this.setState({ showOpt: true });
+  // }
+  //
+  // toggleEditing() {
+  //   this.setState({ onEditing: !this.state.onEditing });
+  // }
 
   toggleImportant() {
     this.setState({ isImportant: !this.state.isImportant });
@@ -141,15 +158,15 @@ class ThoughtItem extends Component {
     return (
       <div className={"item" + (this.state.isImportant ? " important" : "")}>
         <ItemView
-          onClick={this.toggleOpt}
-          onDoubleClick={this.toggleEditing}
+          onClick={this.handleClick}
+          onDoubleClick={(e) => {e.preventDefault();}}
           text={this.props.content}
         />
         { this.state.onEditing && (
           <ItemEdit
             value={this.props.content}
             onChange={this.handleInput}
-            onBlur={this.toggleEditing}
+            onBlur={() => {this.setState({ onEditing: !this.state.onEditing });}}
          /> )
         }
         { this.state.showOpt &&
