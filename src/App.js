@@ -81,14 +81,11 @@ class ThoughtItem extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      showOpt: false,
       onEditing: false,
       isImportant: false
     };
     this.handleInput = this.handleInput.bind(this);
     this.handleClick = this.handleClick.bind(this);
-    // this.toggleOpt = this.toggleOpt.bind(this);
-    // this.toggleEditing = this.toggleEditing.bind(this);
     this.toggleImportant = this.toggleImportant.bind(this);
     this.dispatchItemOpts = this.dispatchItemOpts.bind(this);
     this.clicks = 0;
@@ -115,27 +112,19 @@ class ThoughtItem extends Component {
     this.props.handleInput(tempText);
   }
 
-  handleClick(e) {
+  handleClick() {
     this.clicks++;
     if (this.clicks === 1) {
       this.timer = setTimeout(() => {
-        this.setState({ showOpt: true });
-        this.click = 0;
+        this.props.toggleOpts(this.props.pointer);
+        this.clicks = 0;
       }, 300);
     } else {
-      this.setState({ onEditing: !this.state.onEditing });
       clearTimeout(this.timer);
+      this.setState({ onEditing: !this.state.onEditing });
       this.clicks = 0;
-    }
+    };
   }
-
-  // toggleOpt() {
-  //   this.setState({ showOpt: true });
-  // }
-  //
-  // toggleEditing() {
-  //   this.setState({ onEditing: !this.state.onEditing });
-  // }
 
   toggleImportant() {
     this.setState({ isImportant: !this.state.isImportant });
@@ -169,7 +158,7 @@ class ThoughtItem extends Component {
             onBlur={() => {this.setState({ onEditing: !this.state.onEditing });}}
          /> )
         }
-        { this.state.showOpt &&
+        { is2ArraysEqual(this.props.pointer, this.props.showOpts) &&
           <AllItemOpts onClick={this.dispatchItemOpts}/>
         }
         <AddItem onClick={this.props.onClick}/>
@@ -186,12 +175,14 @@ class ThoughtNode extends Component {
         pointerTemp.push(index);
         return (
           <ThoughtNode
-            key={pointerTemp.length + ' ' + index}
+            key={pointerTemp.toString()}
             treeModel={topic}
             content={topic.topicContent}
+            showOpts={this.props.showOpts}
             pointer={pointerTemp}
             handleInput={this.props.handleInput}
-            onClick={this.props.onClick} />
+            onClick={this.props.onClick}
+            toggleOpts={this.props.toggleOpts}/>
         );
       });
     };
@@ -199,9 +190,12 @@ class ThoughtNode extends Component {
       <div className="branch">
         <div className="topic">
           <ThoughtItem
+            pointer={this.props.pointer}
             content={this.props.content}
+            showOpts={this.props.showOpts}
             handleInput={(text) => {this.props.handleInput(text, this.props.pointer)}}
-            onClick={this.props.onClick(this.props.pointer)} />
+            onClick={this.props.onClick(this.props.pointer)}
+            toggleOpts={this.props.toggleOpts} />
         </div>
         { this.props.treeModel.subTopicsContent.length !== 0 &&
           <div className="sub-topics">
@@ -220,10 +214,12 @@ class App extends Component {
       thoughtTree: [{
         topicContent: 'Mind Map;)',
         subTopicsContent: []
-      }]
+      }],
+      itemShowingOpts: [null]
     };
     this.handleAddItem = this.handleAddItem.bind(this);
     this.handleInput = this.handleInput.bind(this);
+    this.toggleOpts = this.toggleOpts.bind(this);
   }
 
   handleInput(text, pointer) {
@@ -236,6 +232,7 @@ class App extends Component {
   handleAddItem(pointer) {
     var theApp = this;
     return function(e) {
+      theApp.setState({itemShowingOpts: [null]});
       var addType = e.target.className.match(/(sibling|parent|child)\b/)[0];
       var thoughtTreeTemp = theApp.state.thoughtTree.slice(0)[0];
       var itemOnOpt;
@@ -253,7 +250,6 @@ class App extends Component {
             return;
           };
           itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, false);
-          console.log(pointer[pointer.length - 1]);
           itemOnOpt.subTopicsContent.splice((pointer[pointer.length - 1] + 1), 0, {
             topicContent: '',
             subTopicsContent: []
@@ -273,7 +269,11 @@ class App extends Component {
         default:
 
       };
-    }
+    };
+  }
+
+  toggleOpts(pointer) {
+    this.setState({itemShowingOpts: pointer});
   }
 
   render() {
@@ -283,9 +283,11 @@ class App extends Component {
         className={'thought-tree-root'}
         treeModel={this.state.thoughtTree[0]}
         content={this.state.thoughtTree[0].topicContent}
+        showOpts={this.state.itemShowingOpts}
         pointer={[]}
         handleInput={this.handleInput}
-        onClick={this.handleAddItem} />
+        onClick={this.handleAddItem}
+        toggleOpts={this.toggleOpts}/>
     );
   }
 }
@@ -324,6 +326,19 @@ function deepFindItem(thePointer, theTree, findSelf) {
     };
   };
   return theItem;
+}
+
+function is2ArraysEqual(array1, array2) {
+  if (array1.length !== array2.length) {
+    return false;
+  } else {
+    for (var i = 0; i < array1.length; i++) {
+      if (array1[i] !== array2[i]) {
+        return false;
+      };
+    };
+    return true;
+  };
 }
 
 export default App;
