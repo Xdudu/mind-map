@@ -158,7 +158,7 @@ class ThoughtItem extends Component {
             onBlur={() => {this.setState({ onEditing: !this.state.onEditing });}}
          /> )
         }
-        { is2ArraysEqual(this.props.pointer, this.props.showOpts) &&
+        { is2ArraysEqual(this.props.pointer, this.props.itemShowingOpts) &&
           <AllItemOpts onClick={this.dispatchItemOpts}/>
         }
         <AddItem onClick={this.props.onClick}/>
@@ -178,7 +178,7 @@ class ThoughtNode extends Component {
             key={pointerTemp.toString()}
             treeModel={topic}
             content={topic.topicContent}
-            showOpts={this.props.showOpts}
+            itemShowingOpts={this.props.itemShowingOpts}
             pointer={pointerTemp}
             handleInput={this.props.handleInput}
             onClick={this.props.onClick}
@@ -192,7 +192,7 @@ class ThoughtNode extends Component {
           <ThoughtItem
             pointer={this.props.pointer}
             content={this.props.content}
-            showOpts={this.props.showOpts}
+            itemShowingOpts={this.props.itemShowingOpts}
             handleInput={(text) => {this.props.handleInput(text, this.props.pointer)}}
             onClick={this.props.onClick(this.props.pointer)}
             toggleOpts={this.props.toggleOpts} />
@@ -283,7 +283,7 @@ class App extends Component {
         className={'thought-tree-root'}
         treeModel={this.state.thoughtTree[0]}
         content={this.state.thoughtTree[0].topicContent}
-        showOpts={this.state.itemShowingOpts}
+        itemShowingOpts={this.state.itemShowingOpts}
         pointer={[]}
         handleInput={this.handleInput}
         onClick={this.handleAddItem}
