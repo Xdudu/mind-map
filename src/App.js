@@ -108,6 +108,9 @@ class ThoughtItem extends Component {
       this.toggleEditing();
       // this.toggleOpt();
     };
+    if (this.props.beNumbered) {
+      tempText = tempText.slice((tempText.indexOf('. ') + 2));
+    }
     this.props.handleInput(tempText);
   }
 
@@ -132,6 +135,9 @@ class ThoughtItem extends Component {
         break;
       case 'insert-img':
         // this.insertImg();
+        break;
+      case 'number-subtopics':
+        this.props.numberSubs(this.props.pointer);
         break;
       default:
       // this.props.crossItemOpts();
@@ -173,11 +179,15 @@ class ThoughtNode extends Component {
             key={pointerTemp.toString()}
             treeModel={topic}
             pointer={pointerTemp}
-            content={topic.topicContent}
+            content={this.props.treeModel.numberSubTopics ?
+              ((index + 1).toString() + '. ' + topic.topicContent) :
+              topic.topicContent}
             itemShowingOpts={this.props.itemShowingOpts}
             toggleOpts={this.props.toggleOpts}
             isImportant={topic.isImportant}
             toggleImportant={this.props.toggleImportant}
+            beNumbered={this.props.treeModel.numberSubTopics}
+            numberSubs={this.props.numberSubs}
             handleInput={this.props.handleInput}
             onClick={this.props.onClick} />
         );
@@ -193,6 +203,8 @@ class ThoughtNode extends Component {
             toggleOpts={this.props.toggleOpts}
             isImportant={this.props.isImportant}
             toggleImportant={this.props.toggleImportant}
+            beNumbered={this.props.beNumbered}
+            numberSubs={this.props.numberSubs}
             handleInput={(text) => {this.props.handleInput(text, this.props.pointer)}}
             onClick={this.props.onClick(this.props.pointer)} />
         </div>
@@ -217,6 +229,7 @@ class App extends Component {
     this.handleInput = this.handleInput.bind(this);
     this.toggleOpts = this.toggleOpts.bind(this);
     this.toggleImportant = this.toggleImportant.bind(this);
+    this.numberSubs = this.numberSubs.bind(this);
   }
 
   handleInput(text, pointer) {
@@ -273,6 +286,13 @@ class App extends Component {
     this.setState({thoughtTree: [thoughtTreeTemp]});
   }
 
+  numberSubs(pointer) {
+    var thoughtTreeTemp = this.state.thoughtTree.slice(0)[0];
+    var thisItem = deepFindItem(pointer, thoughtTreeTemp, true);
+    thisItem.numberSubTopics = !thisItem.numberSubTopics;
+    this.setState({thoughtTree: [thoughtTreeTemp]});
+  }
+
   render() {
     return (
       <ThoughtNode
@@ -285,6 +305,8 @@ class App extends Component {
         toggleOpts={this.toggleOpts}
         isImportant={this.state.thoughtTree[0].isImportant}
         toggleImportant={this.toggleImportant}
+        beNumbered={false}
+        numberSubs={this.numberSubs}
         handleInput={this.handleInput}
         onClick={this.handleAddItem} />
     );
@@ -299,7 +321,7 @@ var itemOptTypes = [
     typeName: 'insert-img',
     iconFont: 'fontawesome-picture'
   }, {
-    typeName: 'number-children',
+    typeName: 'number-subtopics',
     iconFont: 'fontawesome-list-ol'
   }, {
     typeName: 'copy',
@@ -321,6 +343,7 @@ function ThoughtBranch(content) {
   this.topicContent = !content ? '' : content;
   this.important = false;
   this.subTopicsContent = [];
+  this.numberSubTopics = false;
 }
 
 function deepFindItem(thePointer, theTree, findSelf) {
