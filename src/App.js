@@ -86,7 +86,6 @@ class ThoughtItem extends Component {
     };
     this.handleInput = this.handleInput.bind(this);
     this.handleClick = this.handleClick.bind(this);
-    this.toggleImportant = this.toggleImportant.bind(this);
     this.dispatchItemOpts = this.dispatchItemOpts.bind(this);
     this.clicks = 0;
     this.timer = null;
@@ -98,7 +97,7 @@ class ThoughtItem extends Component {
       var thisItemViewNode = thisThoughtItemNode.firstElementChild;
       var thisItemEditNode = thisItemViewNode.nextElementSibling;
       thisItemEditNode.style.width = (thisItemViewNode.clientWidth + 1) + 'px';
-    }
+    };
   }
 
   handleInput(e) {
@@ -126,14 +125,10 @@ class ThoughtItem extends Component {
     };
   }
 
-  toggleImportant() {
-    this.setState({ isImportant: !this.state.isImportant });
-  }
-
   dispatchItemOpts(optType) {
     switch (optType) {
       case 'make-important':
-        this.toggleImportant();
+        this.props.toggleImportant(this.props.pointer);
         break;
       case 'insert-img':
         // this.insertImg();
@@ -145,7 +140,7 @@ class ThoughtItem extends Component {
 
   render() {
     return (
-      <div className={"item" + (this.state.isImportant ? " important" : "")}>
+      <div className={"item" + (this.props.isImportant ? " important" : "")}>
         <ItemView
           onClick={this.handleClick}
           onDoubleClick={(e) => {e.preventDefault();}}
@@ -177,12 +172,14 @@ class ThoughtNode extends Component {
           <ThoughtNode
             key={pointerTemp.toString()}
             treeModel={topic}
+            pointer={pointerTemp}
             content={topic.topicContent}
             itemShowingOpts={this.props.itemShowingOpts}
-            pointer={pointerTemp}
+            toggleOpts={this.props.toggleOpts}
+            isImportant={topic.isImportant}
+            toggleImportant={this.props.toggleImportant}
             handleInput={this.props.handleInput}
-            onClick={this.props.onClick}
-            toggleOpts={this.props.toggleOpts}/>
+            onClick={this.props.onClick} />
         );
       });
     };
@@ -193,9 +190,11 @@ class ThoughtNode extends Component {
             pointer={this.props.pointer}
             content={this.props.content}
             itemShowingOpts={this.props.itemShowingOpts}
+            toggleOpts={this.props.toggleOpts}
+            isImportant={this.props.isImportant}
+            toggleImportant={this.props.toggleImportant}
             handleInput={(text) => {this.props.handleInput(text, this.props.pointer)}}
-            onClick={this.props.onClick(this.props.pointer)}
-            toggleOpts={this.props.toggleOpts} />
+            onClick={this.props.onClick(this.props.pointer)} />
         </div>
         { this.props.treeModel.subTopicsContent.length !== 0 &&
           <div className="sub-topics">
@@ -213,6 +212,7 @@ class App extends Component {
     this.state = {
       thoughtTree: [{
         topicContent: 'Mind Map;)',
+        important: false,
         subTopicsContent: []
       }],
       itemShowingOpts: [null]
@@ -220,6 +220,7 @@ class App extends Component {
     this.handleAddItem = this.handleAddItem.bind(this);
     this.handleInput = this.handleInput.bind(this);
     this.toggleOpts = this.toggleOpts.bind(this);
+    this.toggleImportant = this.toggleImportant.bind(this);
   }
 
   handleInput(text, pointer) {
@@ -241,6 +242,7 @@ class App extends Component {
           itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, true);
           itemOnOpt.subTopicsContent.push({
             topicContent: '',
+            important: false,
             subTopicsContent: []
           });
           theApp.setState({thoughtTree: [thoughtTreeTemp]});
@@ -252,6 +254,7 @@ class App extends Component {
           itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, false);
           itemOnOpt.subTopicsContent.splice((pointer[pointer.length - 1] + 1), 0, {
             topicContent: '',
+            important: false,
             subTopicsContent: []
           });
           theApp.setState({thoughtTree: [thoughtTreeTemp]});
@@ -260,6 +263,7 @@ class App extends Component {
           itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, false);
           var itemBeenClicked = itemOnOpt.subTopicsContent.splice(pointer[pointer.length - 1], 1, {
             topicContent: '',
+            important: false,
             subTopicsContent: []
           });
           itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, true);
@@ -276,18 +280,27 @@ class App extends Component {
     this.setState({itemShowingOpts: pointer});
   }
 
+  toggleImportant(pointer) {
+    var thoughtTreeTemp = this.state.thoughtTree.slice(0)[0];
+    var itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, true);
+    itemOnOpt.isImportant = !itemOnOpt.isImportant;
+    this.setState({thoughtTree: [thoughtTreeTemp]});
+  }
+
   render() {
     return (
       <ThoughtNode
         key={'root'}
         className={'thought-tree-root'}
         treeModel={this.state.thoughtTree[0]}
+        pointer={[]}
         content={this.state.thoughtTree[0].topicContent}
         itemShowingOpts={this.state.itemShowingOpts}
-        pointer={[]}
+        toggleOpts={this.toggleOpts}
+        isImportant={this.state.thoughtTree[0].isImportant}
+        toggleImportant={this.toggleImportant}
         handleInput={this.handleInput}
-        onClick={this.handleAddItem}
-        toggleOpts={this.toggleOpts}/>
+        onClick={this.handleAddItem} />
     );
   }
 }
