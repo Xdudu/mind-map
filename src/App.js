@@ -153,7 +153,7 @@ class ThoughtItem extends Component {
             onBlur={() => {this.setState({ onEditing: !this.state.onEditing });}}
          /> )
         }
-        { is2ArraysEqual(this.props.pointer, this.props.itemShowingOpts) &&
+        { is2PointersEqual(this.props.pointer, this.props.itemShowingOpts) &&
           <AllItemOpts onClick={this.dispatchItemOpts}/>
         }
         <AddItem onClick={this.props.onClick}/>
@@ -210,11 +210,7 @@ class App extends Component {
   constructor() {
     super();
     this.state = {
-      thoughtTree: [{
-        topicContent: 'Mind Map;)',
-        important: false,
-        subTopicsContent: []
-      }],
+      thoughtTree: [new ThoughtBranch('Mind map;)')],
       itemShowingOpts: [null]
     };
     this.handleAddItem = this.handleAddItem.bind(this);
@@ -231,48 +227,38 @@ class App extends Component {
   }
 
   handleAddItem(pointer) {
+    // set `this` in the scope
     var theApp = this;
     return function(e) {
+      // no item showing opts after click to add an item--trade off?
       theApp.setState({itemShowingOpts: [null]});
       var addType = e.target.className.match(/(sibling|parent|child)\b/)[0];
+      // copy of `thoughtTree` for setting state later
       var thoughtTreeTemp = theApp.state.thoughtTree.slice(0)[0];
-      var itemOnOpt;
+      var newItemParent = null;
+
       switch (addType) {
         case 'child':
-          itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, true);
-          itemOnOpt.subTopicsContent.push({
-            topicContent: '',
-            important: false,
-            subTopicsContent: []
-          });
-          theApp.setState({thoughtTree: [thoughtTreeTemp]});
+          newItemParent = deepFindItem(pointer, thoughtTreeTemp, true);
+          newItemParent.subTopicsContent.push(new ThoughtBranch());
           break;
         case 'sibling':
           if (!pointer.length) {
             return;
           };
-          itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, false);
-          itemOnOpt.subTopicsContent.splice((pointer[pointer.length - 1] + 1), 0, {
-            topicContent: '',
-            important: false,
-            subTopicsContent: []
-          });
-          theApp.setState({thoughtTree: [thoughtTreeTemp]});
+          newItemParent = deepFindItem(pointer, thoughtTreeTemp, false);
+          newItemParent.subTopicsContent.splice((pointer[pointer.length - 1] + 1), 0, new ThoughtBranch());
           break;
         case 'parent':
-          itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, false);
-          var itemBeenClicked = itemOnOpt.subTopicsContent.splice(pointer[pointer.length - 1], 1, {
-            topicContent: '',
-            important: false,
-            subTopicsContent: []
-          });
-          itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, true);
-          itemOnOpt.subTopicsContent.push(itemBeenClicked[0]);
-          theApp.setState({thoughtTree: [thoughtTreeTemp]})
+          newItemParent = deepFindItem(pointer, thoughtTreeTemp, false);
+          var itemBeenClicked = newItemParent.subTopicsContent.splice(pointer[pointer.length - 1], 1, new ThoughtBranch());
+          newItemParent = deepFindItem(pointer, thoughtTreeTemp, true);
+          newItemParent.subTopicsContent.push(itemBeenClicked[0]);
           break;
         default:
-
+          return;
       };
+      theApp.setState({thoughtTree: [thoughtTreeTemp]});
     };
   }
 
@@ -282,8 +268,8 @@ class App extends Component {
 
   toggleImportant(pointer) {
     var thoughtTreeTemp = this.state.thoughtTree.slice(0)[0];
-    var itemOnOpt = deepFindItem(pointer, thoughtTreeTemp, true);
-    itemOnOpt.isImportant = !itemOnOpt.isImportant;
+    var thisItem = deepFindItem(pointer, thoughtTreeTemp, true);
+    thisItem.isImportant = !thisItem.isImportant;
     this.setState({thoughtTree: [thoughtTreeTemp]});
   }
 
@@ -331,6 +317,12 @@ var itemOptTypes = [
   }
 ];
 
+function ThoughtBranch(content) {
+  this.topicContent = !content ? '' : content;
+  this.important = false;
+  this.subTopicsContent = [];
+}
+
 function deepFindItem(thePointer, theTree, findSelf) {
   var theItem = theTree;
   if (!(!thePointer.length && findSelf)) {
@@ -341,12 +333,12 @@ function deepFindItem(thePointer, theTree, findSelf) {
   return theItem;
 }
 
-function is2ArraysEqual(array1, array2) {
-  if (array1.length !== array2.length) {
+function is2PointersEqual(pointer1, pointer2) {
+  if (pointer1.length !== pointer2.length) {
     return false;
   } else {
-    for (var i = 0; i < array1.length; i++) {
-      if (array1[i] !== array2[i]) {
+    for (var i = 0; i < pointer1.length; i++) {
+      if (pointer1[i] !== pointer2[i]) {
         return false;
       };
     };
