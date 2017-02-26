@@ -139,8 +139,9 @@ class ThoughtItem extends Component {
       case 'number-subtopics':
         this.props.numberSubs(this.props.pointer);
         break;
+      // other opts: copy, paste, cut, delete-self, delete-self-and-subs
       default:
-      // this.props.crossItemOpts();
+        this.props.crossItemOpts(this.props.pointer, optType);
     };
   }
 
@@ -188,6 +189,7 @@ class ThoughtNode extends Component {
             toggleImportant={this.props.toggleImportant}
             beNumbered={this.props.treeModel.numberSubTopics}
             numberSubs={this.props.numberSubs}
+            crossItemOpts={this.props.crossItemOpts}
             handleInput={this.props.handleInput}
             onClick={this.props.onClick} />
         );
@@ -205,6 +207,7 @@ class ThoughtNode extends Component {
             toggleImportant={this.props.toggleImportant}
             beNumbered={this.props.beNumbered}
             numberSubs={this.props.numberSubs}
+            crossItemOpts={this.props.crossItemOpts}
             handleInput={(text) => {this.props.handleInput(text, this.props.pointer)}}
             onClick={this.props.onClick(this.props.pointer)} />
         </div>
@@ -222,21 +225,23 @@ class App extends Component {
   constructor() {
     super();
     this.state = {
-      thoughtTree: [new ThoughtBranch('Mind map;)')],
-      itemShowingOpts: [null]
+      thoughtTree: new ThoughtBranch('Mind map;)'),
+      itemShowingOpts: [null],
+      itemForPaste: null
     };
     this.handleAddItem = this.handleAddItem.bind(this);
     this.handleInput = this.handleInput.bind(this);
     this.toggleOpts = this.toggleOpts.bind(this);
     this.toggleImportant = this.toggleImportant.bind(this);
     this.numberSubs = this.numberSubs.bind(this);
+    this.crossItemOpts = this.crossItemOpts.bind(this);
   }
 
   handleInput(text, pointer) {
-    var thoughtTreeTemp = this.state.thoughtTree.slice(0)[0];
-    var contentChangedItem = deepFindItem(pointer, thoughtTreeTemp, true);
+    var thoughtTreeCopy = JSON.parse(JSON.stringify(this.state.thoughtTree));
+    var contentChangedItem = deepFindItem(pointer, thoughtTreeCopy, true);
     contentChangedItem.topicContent = text;
-    this.setState({thoughtTree: [thoughtTreeTemp]});
+    this.setState({thoughtTree: thoughtTreeCopy});
   }
 
   handleAddItem(pointer) {
@@ -247,31 +252,31 @@ class App extends Component {
       theApp.setState({itemShowingOpts: [null]});
       var addType = e.target.className.match(/(sibling|parent|child)\b/)[0];
       // copy of `thoughtTree` for setting state later
-      var thoughtTreeTemp = theApp.state.thoughtTree.slice(0)[0];
+      var thoughtTreeCopy = JSON.parse(JSON.stringify(theApp.state.thoughtTree));
       var newItemParent = null;
 
       switch (addType) {
         case 'child':
-          newItemParent = deepFindItem(pointer, thoughtTreeTemp, true);
+          newItemParent = deepFindItem(pointer, thoughtTreeCopy, true);
           newItemParent.subTopicsContent.push(new ThoughtBranch());
           break;
         case 'sibling':
           if (!pointer.length) {
             return;
           };
-          newItemParent = deepFindItem(pointer, thoughtTreeTemp, false);
+          newItemParent = deepFindItem(pointer, thoughtTreeCopy, false);
           newItemParent.subTopicsContent.splice((pointer[pointer.length - 1] + 1), 0, new ThoughtBranch());
           break;
         case 'parent':
-          newItemParent = deepFindItem(pointer, thoughtTreeTemp, false);
+          newItemParent = deepFindItem(pointer, thoughtTreeCopy, false);
           var itemBeenClicked = newItemParent.subTopicsContent.splice(pointer[pointer.length - 1], 1, new ThoughtBranch());
-          newItemParent = deepFindItem(pointer, thoughtTreeTemp, true);
+          newItemParent = deepFindItem(pointer, thoughtTreeCopy, true);
           newItemParent.subTopicsContent.push(itemBeenClicked[0]);
           break;
         default:
           return;
       };
-      theApp.setState({thoughtTree: [thoughtTreeTemp]});
+      theApp.setState({thoughtTree: thoughtTreeCopy});
     };
   }
 
@@ -280,17 +285,57 @@ class App extends Component {
   }
 
   toggleImportant(pointer) {
-    var thoughtTreeTemp = this.state.thoughtTree.slice(0)[0];
-    var thisItem = deepFindItem(pointer, thoughtTreeTemp, true);
-    thisItem.isImportant = !thisItem.isImportant;
-    this.setState({thoughtTree: [thoughtTreeTemp]});
+    var thoughtTreeCopy = JSON.parse(JSON.stringify(this.state.thoughtTree));
+    var itemFiringOpt = deepFindItem(pointer, thoughtTreeCopy, true);
+    itemFiringOpt.isImportant = !itemFiringOpt.isImportant;
+    this.setState({thoughtTree: thoughtTreeCopy});
   }
 
   numberSubs(pointer) {
-    var thoughtTreeTemp = this.state.thoughtTree.slice(0)[0];
-    var thisItem = deepFindItem(pointer, thoughtTreeTemp, true);
+    var thoughtTreeCopy = JSON.parse(JSON.stringify(this.state.thoughtTree));
+    var thisItem = deepFindItem(pointer, thoughtTreeCopy, true);
     thisItem.numberSubTopics = !thisItem.numberSubTopics;
-    this.setState({thoughtTree: [thoughtTreeTemp]});
+    this.setState({thoughtTree: thoughtTreeCopy});
+  }
+
+  crossItemOpts(pointer, optType) {
+    var thoughtTreeCopy = JSON.parse(JSON.stringify(this.state.thoughtTree));
+    switch (optType) {
+      case 'copy':
+        var itemToBeCopied = deepFindItem(pointer, thoughtTreeCopy, true);
+        this.setState({itemForPaste: itemToBeCopied});
+        break;
+      case 'paste':
+        var parentItemForPaste = deepFindItem(pointer, thoughtTreeCopy, true);
+        var itemForPasteCopy = JSON.parse(JSON.stringify(this.state.itemForPaste));
+        parentItemForPaste.subTopicsContent.push(itemForPasteCopy);
+        this.setState({thoughtTree: thoughtTreeCopy});
+        break;
+      case 'cut':
+        // no item showing opts after click to add an item--trade off?
+        this.setState({itemShowingOpts: [null]});
+        var itemDeletingSubTopicFrom = deepFindItem(pointer, thoughtTreeCopy, false);
+        var itemBeenCut = itemDeletingSubTopicFrom.subTopicsContent.splice(pointer[pointer.length - 1], 1)[0];
+        this.setState({thoughtTree: thoughtTreeCopy, itemForPaste: itemBeenCut});
+        break;
+      case 'delete-self':
+        // no item showing opts after click to add an item--trade off?
+        this.setState({itemShowingOpts: [null]});
+        var itemDeletingTopicFrom = deepFindItem(pointer, thoughtTreeCopy, false);
+        var subTopicsOfItemBeenDelete = deepFindItem(pointer, thoughtTreeCopy, true).subTopicsContent;
+        itemDeletingTopicFrom.subTopicsContent.splice(pointer[pointer.length - 1], 1, ...subTopicsOfItemBeenDelete);
+        this.setState({thoughtTree: thoughtTreeCopy});
+        break;
+      case 'delete-self-and-subs':
+        // no item showing opts after click to add an item--trade off?
+        this.setState({itemShowingOpts: [null]});
+        var itemDeletingTopicFrom = deepFindItem(pointer, thoughtTreeCopy, false);
+        itemDeletingTopicFrom.subTopicsContent.splice(pointer[pointer.length - 1], 1);
+        this.setState({thoughtTree: thoughtTreeCopy});
+        break;
+      default:
+
+    }
   }
 
   render() {
@@ -298,15 +343,16 @@ class App extends Component {
       <ThoughtNode
         key={'root'}
         className={'thought-tree-root'}
-        treeModel={this.state.thoughtTree[0]}
+        treeModel={this.state.thoughtTree}
         pointer={[]}
-        content={this.state.thoughtTree[0].topicContent}
+        content={this.state.thoughtTree.topicContent}
         itemShowingOpts={this.state.itemShowingOpts}
         toggleOpts={this.toggleOpts}
-        isImportant={this.state.thoughtTree[0].isImportant}
+        isImportant={this.state.thoughtTree.isImportant}
         toggleImportant={this.toggleImportant}
         beNumbered={false}
         numberSubs={this.numberSubs}
+        crossItemOpts={this.crossItemOpts}
         handleInput={this.handleInput}
         onClick={this.handleAddItem} />
     );
