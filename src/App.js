@@ -105,8 +105,10 @@ class ThoughtItem extends Component {
     // if the key `Enter` is pressed, discard it and quit editing
     if (tempText.charCodeAt(tempText.length-1) === 10) {
       tempText = tempText.slice(0, -1);
-      this.toggleEditing();
-      // this.toggleOpt();
+      this.setState({ onEditing: !this.state.onEditing });
+      if (is2PointersEqual(this.props.pointer, this.props.itemShowingOpts)) {
+        this.props.toggleOpts([null]);
+      }
     };
     if (this.props.beNumbered) {
       tempText = tempText.slice((tempText.indexOf('. ') + 2));
@@ -146,8 +148,12 @@ class ThoughtItem extends Component {
   }
 
   render() {
+    var showOpts = is2PointersEqual(this.props.pointer, this.props.itemShowingOpts);
     return (
-      <div className={"item" + (this.props.isImportant ? " important" : "")}>
+      <div className={this.props.className
+        + " item"
+        + (this.props.isImportant ? " important" : "")
+        + (showOpts ? " on-opts" : "")}>
         <ItemView
           onClick={this.handleClick}
           onDoubleClick={(e) => {e.preventDefault();}}
@@ -160,7 +166,7 @@ class ThoughtItem extends Component {
             onBlur={() => {this.setState({ onEditing: !this.state.onEditing });}}
          /> )
         }
-        { is2PointersEqual(this.props.pointer, this.props.itemShowingOpts) &&
+        { showOpts &&
           <AllItemOpts onClick={this.dispatchItemOpts}/>
         }
         <AddItem onClick={this.props.onClick}/>
@@ -195,10 +201,25 @@ class ThoughtNode extends Component {
         );
       });
     };
+    var classNameForHierarchy = null;
+    switch (this.props.pointer.length) {
+      case 0:
+        classNameForHierarchy = 'first-class-topic';
+        break;
+      case 1:
+        classNameForHierarchy = 'second-class-topics';
+        break;
+      case 2:
+        classNameForHierarchy = 'third-class-topics';
+        break;
+      default:
+        classNameForHierarchy = 'other-topics';
+    }
     return (
-      <div className="branch">
+      <div className={!this.props.pointer.length ? "thought-tree-root branch" : "branch"}>
         <div className="topic">
           <ThoughtItem
+            className={classNameForHierarchy}
             pointer={this.props.pointer}
             content={this.props.content}
             itemShowingOpts={this.props.itemShowingOpts}
@@ -340,21 +361,23 @@ class App extends Component {
 
   render() {
     return (
-      <ThoughtNode
-        key={'root'}
-        className={'thought-tree-root'}
-        treeModel={this.state.thoughtTree}
-        pointer={[]}
-        content={this.state.thoughtTree.topicContent}
-        itemShowingOpts={this.state.itemShowingOpts}
-        toggleOpts={this.toggleOpts}
-        isImportant={this.state.thoughtTree.isImportant}
-        toggleImportant={this.toggleImportant}
-        beNumbered={false}
-        numberSubs={this.numberSubs}
-        crossItemOpts={this.crossItemOpts}
-        handleInput={this.handleInput}
-        onClick={this.handleAddItem} />
+      <div className="mind">
+        <ThoughtNode
+          key={'root'}
+          className={'thought-tree-root'}
+          treeModel={this.state.thoughtTree}
+          pointer={[]}
+          content={this.state.thoughtTree.topicContent}
+          itemShowingOpts={this.state.itemShowingOpts}
+          toggleOpts={this.toggleOpts}
+          isImportant={this.state.thoughtTree.isImportant}
+          toggleImportant={this.toggleImportant}
+          beNumbered={false}
+          numberSubs={this.numberSubs}
+          crossItemOpts={this.crossItemOpts}
+          handleInput={this.handleInput}
+          onClick={this.handleAddItem} />
+      </div>
     );
   }
 }
