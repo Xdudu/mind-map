@@ -91,7 +91,7 @@ class ThoughtItem extends Component {
     this.timer = null;
   }
 
-  componentDidUpdate (prevProps, prevState) {
+  componentDidUpdate() {
     if (this.state.onEditing) {
       var thisThoughtItemNode = ReactDOM.findDOMNode(this);
       var thisItemViewNode = thisThoughtItemNode.firstElementChild;
@@ -176,14 +176,39 @@ class ThoughtItem extends Component {
 }
 
 class ThoughtNode extends Component {
+
+  componentDidMount() {
+    var thisThoughtItemNode = ReactDOM.findDOMNode(this);
+    thisThoughtItemNode.style.height = thisThoughtItemNode.childNodes[0].childNodes[0].clientHeight + 'px';
+  }
+
+  componentDidUpdate() {
+    var thisThoughtNode = ReactDOM.findDOMNode(this);
+    if (thisThoughtNode.parentNode.childNodes.length > 2) {
+      var topicNodeClientHeight = thisThoughtNode.firstElementChild.clientHeight;
+      var subTopicsNodeClientHeight = thisThoughtNode.childNodes.length > 1 ?
+                                    thisThoughtNode.lastElementChild.clientHeight : 0;
+      thisThoughtNode.style.height = Math.max(topicNodeClientHeight, subTopicsNodeClientHeight) + 'px';
+    };
+  }
+
   render() {
     if (this.props.treeModel.subTopicsContent.length !== 0) {
       var subDiv = this.props.treeModel.subTopicsContent.map((topic, index) => {
         var pointerTemp = this.props.pointer.slice(0);
         pointerTemp.push(index);
+        var classNameForBeforeLine = null;
+        if (index === 0 && this.props.treeModel.subTopicsContent.length > 1) {
+          classNameForBeforeLine = "bottom-half-line ";
+        } else if (index === this.props.treeModel.subTopicsContent.length - 1 && this.props.treeModel.subTopicsContent.length > 1) {
+          classNameForBeforeLine = "top-half-line ";
+        } else {
+          classNameForBeforeLine = "full-line ";
+        }
         return (
           <ThoughtNode
             key={pointerTemp.toString()}
+            className={classNameForBeforeLine}
             treeModel={topic}
             pointer={pointerTemp}
             content={this.props.treeModel.numberSubTopics ?
@@ -216,7 +241,7 @@ class ThoughtNode extends Component {
         classNameForHierarchy = 'other-topics';
     }
     return (
-      <div className={!this.props.pointer.length ? "thought-tree-root branch" : "branch"}>
+      <div className={this.props.className + "branch"}>
         <div className="topic">
           <ThoughtItem
             className={classNameForHierarchy}
@@ -235,6 +260,23 @@ class ThoughtNode extends Component {
         { this.props.treeModel.subTopicsContent.length !== 0 &&
           <div className="sub-topics">
             {subDiv}
+            <svg
+              style={{
+                width: "60px",
+                height: "2px",
+                position: "absolute",
+                left: "-30px",
+                top: "50%"
+              }}
+              version="1.1" xmlns="http://www.w3.org/2000/svg"
+              xmlnsXlink="http://www.w3.org/1999/xlink">
+              <line
+                x1="0"
+                y1="1"
+                x2="45"
+                y2="1"
+                stroke="#a39e8a" />
+            </svg>
           </div>
         }
       </div>
@@ -364,7 +406,7 @@ class App extends Component {
       <div className="mind">
         <ThoughtNode
           key={'root'}
-          className={'thought-tree-root'}
+          className={'thought-tree-root '}
           treeModel={this.state.thoughtTree}
           pointer={[]}
           content={this.state.thoughtTree.topicContent}

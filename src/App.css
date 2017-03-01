@@ -225,9 +225,39 @@
 }
 
 .topic, .sub-topics {
+  position: relative;
   display: inline-flex;
 }
 
 .sub-topics {
   flex-direction: column;
+}
+
+.bottom-half-line::before {
+  content: '';
+  display: inline-block;
+  position: relative;
+  height: 50%;
+  top: 25%;
+  left: 15px;
+  border-left: 2px double #a39e8a;
+}
+
+.top-half-line::before {
+  content: '';
+  display: inline-block;
+  position: relative;
+  height: 50%;
+  bottom: 25%;
+  left: 15px;
+  border-left: 2px double #a39e8a;
+}
+
+.full-line::before {
+  content: '';
+  display: inline-block;
+  position: relative;
+  height: 100%;
+  left: 15px;
+  border-left: 2px double #a39e8a;
 }
