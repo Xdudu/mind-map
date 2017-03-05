@@ -23,7 +23,7 @@
 .item {
   display: inline-block; /*adjust width automatically to child's width*/
   position: relative;
-  margin: 15px 30px; /* TODO: for debug, delete later */
+  margin: 12px 30px; /* TODO: for debug, delete later */
   border-radius: 24px;
   font-family: 'Microsoft Yahei', sans-serif;
 }
@@ -134,7 +134,7 @@
   background-color: rgba(251, 194, 164, 0.5);
 }
 
-.other-topics .delete-has-sub-opts div {
+.third-class-topics .delete-has-sub-opts div {
   background-color: rgba(194, 227, 210, 0.5);
 }
 

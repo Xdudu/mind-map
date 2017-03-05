@@ -211,10 +211,17 @@ class ThoughtItem extends Component {
 }
 
 class ThoughtNode extends Component {
-
+  // force setting the height of the branch in order to provide a relative value
+  // for the height of double border before this branch
   componentDidMount() {
-    var thisThoughtItemNode = ReactDOM.findDOMNode(this);
-    thisThoughtItemNode.style.height = thisThoughtItemNode.childNodes[0].childNodes[0].clientHeight + 'px';
+    var thisThoughtNode = ReactDOM.findDOMNode(this);
+    var thisThoughtTopic = thisThoughtNode.childNodes[0];
+    var thisThoughtItem = thisThoughtNode.childNodes[0].childNodes[0];
+    // console.log(thisThoughtItem.style);
+    var thisNodeParent = thisThoughtNode.parentNode;
+    thisThoughtNode.style.height = (thisNodeParent.childNodes.length > 2 ?
+                                    thisThoughtTopic.clientHeight :
+                                    thisThoughtItem.clientHeight) + 'px';
   }
 
   componentDidUpdate() {
@@ -348,7 +355,6 @@ class App extends Component {
     return function(e) {
       // no item showing opts after click to add an item--trade off?
       theApp.setState({itemShowingOpts: [null]});
-      console.log(e.target.className);
       var addType = e.target.className.match(/(sibling|parent|child)\b/)[0];
       // copy of `thoughtTree` for setting state later
       var thoughtTreeCopy = JSON.parse(JSON.stringify(theApp.state.thoughtTree));
